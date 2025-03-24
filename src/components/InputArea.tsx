@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { createTemplate } from "@/utils/supabase";
 
 type InputAreaProps = {
   onSubmit: (prompt: string, options?: any) => void;
@@ -13,6 +17,8 @@ type InputAreaProps = {
 
 const InputArea = ({ onSubmit, isProcessing = false }: InputAreaProps) => {
   const [prompt, setPrompt] = useState('');
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [templateTitle, setTemplateTitle] = useState('');
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,20 +34,29 @@ const InputArea = ({ onSubmit, isProcessing = false }: InputAreaProps) => {
     onSubmit(prompt);
   };
   
-  const handleSaveTemplate = () => {
-    if (!prompt.trim()) {
+  const handleSaveTemplate = async () => {
+    if (!templateTitle.trim()) {
       toast({
-        title: "Empty prompt",
-        description: "Please enter a prompt before saving as template.",
+        title: "Missing title",
+        description: "Please enter a title for your template.",
         variant: "destructive",
       });
       return;
     }
     
-    toast({
-      title: "Template saved",
-      description: "Your prompt has been saved as a template.",
-    });
+    try {
+      const newTemplate = await createTemplate(templateTitle, prompt);
+      if (newTemplate) {
+        setSaveDialogOpen(false);
+        setTemplateTitle("");
+        toast({
+          title: "Template saved",
+          description: "Your prompt has been saved as a template.",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving template:", error);
+    }
   };
   
   const handleClear = () => {
@@ -121,7 +136,17 @@ const InputArea = ({ onSubmit, isProcessing = false }: InputAreaProps) => {
                     type="button" 
                     variant="outline" 
                     size="icon" 
-                    onClick={handleSaveTemplate}
+                    onClick={() => {
+                      if (!prompt.trim()) {
+                        toast({
+                          title: "Empty prompt",
+                          description: "Please enter a prompt before saving as template.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      setSaveDialogOpen(true);
+                    }}
                     disabled={isProcessing || !prompt}
                     className="text-mymanus-silver hover:text-mymanus-gold"
                   >
@@ -145,6 +170,36 @@ const InputArea = ({ onSubmit, isProcessing = false }: InputAreaProps) => {
           </Button>
         </div>
       </form>
+
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent className="bg-black border-mymanus-gold/30 text-mymanus-silver">
+          <DialogHeader>
+            <DialogTitle className="text-mymanus-gold">Save Prompt as Template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="template-title">Template Title</Label>
+              <Input 
+                id="template-title"
+                value={templateTitle}
+                onChange={(e) => setTemplateTitle(e.target.value)}
+                placeholder="Enter a descriptive title"
+                className="input-field"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="template-preview">Prompt Content</Label>
+              <div className="p-3 bg-muted/30 rounded text-sm max-h-32 overflow-auto">
+                {prompt}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>Cancel</Button>
+            <Button className="btn-primary" onClick={handleSaveTemplate}>Save Template</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

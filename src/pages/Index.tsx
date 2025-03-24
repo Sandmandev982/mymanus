@@ -12,79 +12,109 @@ import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-
-// Sample conversation data
-const sampleConversations = [
-  {
-    id: '1',
-    title: 'Website Redesign Plan',
-    preview: 'Create a detailed plan for redesigning our company website...',
-    timestamp: '2h ago',
-  },
-  {
-    id: '2',
-    title: 'Marketing Email Draft',
-    preview: 'Draft a marketing email for our new product launch...',
-    timestamp: '5h ago',
-  },
-  {
-    id: '3',
-    title: 'Code Review Feedback',
-    preview: 'Provide feedback on this pull request code...',
-    timestamp: 'Yesterday',
-  },
-];
-
-// Sample template data
-const sampleTemplates = [
-  {
-    id: '1',
-    title: 'Blog Post Outline',
-    content: 'Create a detailed outline for a blog post about [TOPIC]. Include an introduction, at least 5 main sections with subpoints, and a conclusion.',
-  },
-  {
-    id: '2',
-    title: 'Code Documentation',
-    content: 'Generate comprehensive documentation for the following code: [CODE]. Include function descriptions, parameters, return values, and usage examples.',
-  },
-  {
-    id: '3',
-    title: 'Marketing Email',
-    content: 'Write a marketing email for [PRODUCT] targeting [AUDIENCE]. The email should highlight key benefits, include a compelling call-to-action, and be approximately 300 words.',
-  },
-];
+import { createConversation, saveMessage, getMessages } from '@/utils/supabase';
+import { Message } from '@/types/database';
 
 const Index = () => {
   const [output, setOutput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<string | undefined>(undefined);
+  const [currentInput, setCurrentInput] = useState('');
+  const [currentMessages, setCurrentMessages] = useState<Message[]>([]);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  const handlePromptSubmit = (prompt: string) => {
+  useEffect(() => {
+    if (selectedConversation) {
+      loadMessages(selectedConversation);
+    }
+  }, [selectedConversation]);
+
+  const loadMessages = async (conversationId: string) => {
+    try {
+      const messages = await getMessages(conversationId);
+      setCurrentMessages(messages);
+      
+      // If there are messages, show the last response in the output area
+      if (messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        setOutput(lastMessage.response || '');
+      } else {
+        setOutput('');
+      }
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    }
+  };
+
+  const handlePromptSubmit = async (prompt: string) => {
     setIsProcessing(true);
+    setCurrentInput(prompt);
     setOutput(''); // Clear previous output
     
-    // Simulate API call to OpenManus
-    setTimeout(() => {
-      // Generate a sample response based on the prompt
-      const response = generateSampleResponse(prompt);
+    try {
+      // Simulate API call to OpenManus
+      setTimeout(async () => {
+        // Generate a sample response based on the prompt
+        const response = generateSampleResponse(prompt);
+        
+        // For demonstration: simulate streaming response
+        let displayedResponse = '';
+        const words = response.split(' ');
+        
+        const interval = setInterval(() => {
+          if (words.length > 0) {
+            displayedResponse += words.shift() + ' ';
+            setOutput(displayedResponse);
+          } else {
+            clearInterval(interval);
+            finishProcessing(prompt, displayedResponse);
+          }
+        }, 50);
+      }, 1000);
+    } catch (error) {
+      console.error("Error processing prompt:", error);
+      setIsProcessing(false);
+      toast({
+        title: "Error",
+        description: "An error occurred while processing your prompt.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const finishProcessing = async (prompt: string, response: string) => {
+    try {
+      let conversationId = selectedConversation;
       
-      // For demonstration: simulate streaming response
-      let displayedResponse = '';
-      const words = response.split(' ');
-      
-      const interval = setInterval(() => {
-        if (words.length > 0) {
-          displayedResponse += words.shift() + ' ';
-          setOutput(displayedResponse);
-        } else {
-          clearInterval(interval);
-          setIsProcessing(false);
+      // If no conversation is selected, create a new one
+      if (!conversationId) {
+        // Generate a title from the prompt (first few words)
+        const title = prompt.split(' ').slice(0, 5).join(' ') + (prompt.length > 30 ? '...' : '');
+        const preview = prompt.substring(0, 100) + (prompt.length > 100 ? '...' : '');
+        
+        const newConversation = await createConversation(title, preview);
+        if (newConversation) {
+          conversationId = newConversation.id;
+          setSelectedConversation(conversationId);
         }
-      }, 50);
-    }, 1000);
+      }
+      
+      // Save the message
+      if (conversationId) {
+        await saveMessage(conversationId, prompt, response);
+        
+        // Reload messages to update the UI
+        if (selectedConversation) {
+          await loadMessages(selectedConversation);
+        }
+      }
+    } catch (error) {
+      console.error("Error saving conversation:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   const generateSampleResponse = (prompt: string) => {
@@ -137,26 +167,15 @@ This approach will help ensure that your project delivers meaningful results whi
   
   const handleSelectConversation = (id: string) => {
     setSelectedConversation(id);
-    // In a real app, we would load the conversation content here
-    toast({
-      title: "Conversation selected",
-      description: "This would load the conversation in a real application.",
-    });
-  };
-  
-  const handleDeleteConversation = (id: string) => {
-    // In a real app, we would delete the conversation here
-    toast({
-      title: "Conversation deleted",
-      description: "This would delete the conversation in a real application.",
-    });
   };
   
   const handleSelectTemplate = (content: string) => {
-    // In a real app, we would set this content in the input area
+    setCurrentInput(content);
+    // Auto-fill the input area by grabbing a reference to the InputArea component
+    // For now, we'll just show a toast message
     toast({
       title: "Template selected",
-      description: "This would fill the input area with the template in a real application.",
+      description: "Template content loaded into the input area.",
     });
   };
   
@@ -199,16 +218,11 @@ This approach will help ensure that your project delivers meaningful results whi
                   )}
                   
                   {/* Prompt Templates */}
-                  <PromptTemplates 
-                    templates={sampleTemplates} 
-                    onSelectTemplate={handleSelectTemplate} 
-                  />
+                  <PromptTemplates onSelectTemplate={handleSelectTemplate} />
                   
                   {/* Conversation History */}
                   <ConversationHistory 
-                    conversations={sampleConversations}
                     onSelectConversation={handleSelectConversation}
-                    onDeleteConversation={handleDeleteConversation}
                     selectedId={selectedConversation}
                   />
                 </div>

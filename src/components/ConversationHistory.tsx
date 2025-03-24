@@ -1,32 +1,73 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2, MessageCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-type Conversation = {
-  id: string;
-  title: string;
-  preview: string;
-  timestamp: string;
-};
+import { getConversations, deleteConversation } from "@/utils/supabase";
+import { Conversation } from "@/types/database";
+import { toast } from "@/components/ui/use-toast";
 
 type ConversationHistoryProps = {
-  conversations: Conversation[];
   onSelectConversation: (id: string) => void;
-  onDeleteConversation: (id: string) => void;
   selectedId?: string;
 };
 
 const ConversationHistory = ({ 
-  conversations, 
   onSelectConversation, 
-  onDeleteConversation, 
   selectedId 
 }: ConversationHistoryProps) => {
   const isMobile = useIsMobile();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadConversations = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getConversations();
+        setConversations(data);
+      } catch (error) {
+        console.error("Error loading conversations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadConversations();
+  }, []);
+
+  const handleDeleteConversation = async (id: string) => {
+    try {
+      const success = await deleteConversation(id);
+      if (success) {
+        setConversations(conversations.filter(conv => conv.id !== id));
+        toast({
+          title: "Conversation deleted",
+          description: "The conversation has been removed.",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+    }
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      return 'Just now';
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    } else if (diffInHours < 48) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
   
   return (
     <div className="card-glass w-full">
@@ -38,7 +79,16 @@ const ConversationHistory = ({
       </div>
       
       <ScrollArea className="h-64">
-        {conversations.length > 0 ? (
+        {isLoading ? (
+          <div className="space-y-2 animate-pulse p-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="p-2 rounded-md bg-muted">
+                <div className="h-4 bg-mymanus-lightsilver/20 rounded w-2/3 mb-2"></div>
+                <div className="h-3 bg-mymanus-lightsilver/20 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        ) : conversations.length > 0 ? (
           <div className="space-y-2">
             {conversations.map((conversation) => (
               <div 
@@ -58,11 +108,11 @@ const ConversationHistory = ({
                       {conversation.title}
                     </h4>
                     <span className="text-xs text-mymanus-lightsilver">
-                      {conversation.timestamp}
+                      {formatTimestamp(conversation.timestamp)}
                     </span>
                   </div>
                   <p className="text-xs text-mymanus-lightsilver truncate">
-                    {conversation.preview}
+                    {conversation.preview || "No preview available"}
                   </p>
                 </div>
                 
@@ -74,7 +124,7 @@ const ConversationHistory = ({
                         size="icon" 
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDeleteConversation(conversation.id);
+                          handleDeleteConversation(conversation.id);
                         }}
                         className="ml-2 mt-1 text-mymanus-lightsilver hover:text-mymanus-red"
                       >

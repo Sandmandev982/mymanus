@@ -1,0 +1,128 @@
+
+/* Custom MyManus styling */
+
+:root {
+  --mymanus-silver: #C0C0C0;
+  --mymanus-lightsilver: #A0A0A0;
+  --mymanus-gold: #FFD700;
+  --mymanus-red: #FF0000;
+}
+
+.text-mymanus-silver {
+  color: var(--mymanus-silver);
+}
+
+.text-mymanus-lightsilver {
+  color: var(--mymanus-lightsilver);
+}
+
+.text-mymanus-gold {
+  color: var(--mymanus-gold);
+}
+
+.text-mymanus-red {
+  color: var(--mymanus-red);
+}
+
+.bg-mymanus-gold\/10 {
+  background-color: rgba(255, 215, 0, 0.1);
+}
+
+.border-mymanus-gold\/30 {
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.hover\:text-mymanus-gold:hover {
+  color: var(--mymanus-gold);
+}
+
+.hover\:text-mymanus-red:hover {
+  color: var(--mymanus-red);
+}
+
+.hover\:bg-mymanus-gold\/10:hover {
+  background-color: rgba(255, 215, 0, 0.1);
+}
+
+.card-glass {
+  background-color: rgba(30, 30, 30, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.input-field {
+  background-color: rgba(20, 20, 20, 0.8) !important;
+  color: var(--mymanus-silver) !important;
+  border: 1px solid rgba(255, 215, 0, 0.2) !important;
+}
+
+.input-field:focus {
+  border-color: var(--mymanus-gold) !important;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2) !important;
+}
+
+.btn-primary {
+  background-color: var(--mymanus-gold) !important;
+  color: black !important;
+}
+
+.btn-primary:hover {
+  background-color: rgba(255, 215, 0, 0.8) !important;
+}
+
+.btn-secondary {
+  background-color: rgba(30, 30, 30, 0.8) !important;
+  border: 1px solid var(--mymanus-gold) !important;
+  color: var(--mymanus-silver) !important;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(255, 215, 0, 0.1) !important;
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
