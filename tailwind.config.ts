@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,12 +62,25 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// MyManus specific colors
+				mymanus: {
+					red: '#FF0000',
+					gold: '#FFD700',
+					silver: '#C0C0C0',
+					lightsilver: '#A0A0A0',
+					black: '#000000',
 				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			fontFamily: {
+				montserrat: ['Montserrat', 'sans-serif'],
+				opensans: ['Open Sans', 'sans-serif'],
+				roboto: ['Roboto', 'sans-serif'],
 			},
 			keyframes: {
 				'accordion-down': {
@@ -84,11 +98,74 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					from: {
+						opacity: '0'
+					},
+					to: {
+						opacity: '1'
+					}
+				},
+				'fade-out': {
+					from: {
+						opacity: '1'
+					},
+					to: {
+						opacity: '0'
+					}
+				},
+				'slide-in': {
+					from: {
+						transform: 'translateX(-100%)'
+					},
+					to: {
+						transform: 'translateX(0)'
+					}
+				},
+				'slide-out': {
+					from: {
+						transform: 'translateX(0)'
+					},
+					to: {
+						transform: 'translateX(-100%)'
+					}
+				},
+				'pulse-subtle': {
+					'0%, 100%': {
+						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.7'
+					}
+				},
+				'pulse-gold': {
+					'0%, 100%': {
+						boxShadow: '0 0 0 0 rgba(255, 215, 0, 0)'
+					},
+					'50%': {
+						boxShadow: '0 0 0 5px rgba(255, 215, 0, 0.2)'
+					}
+				},
+				'shimmer': {
+					'0%': {
+						backgroundPosition: '-500px 0'
+					},
+					'100%': {
+						backgroundPosition: '500px 0'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-out',
+				'fade-out': 'fade-out 0.3s ease-out',
+				'slide-in': 'slide-in 0.3s ease-out',
+				'slide-out': 'slide-out 0.3s ease-out',
+				'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
+				'pulse-gold': 'pulse-gold 2s infinite',
+				'shimmer': 'shimmer 2s linear infinite'
 			}
 		}
 	},
